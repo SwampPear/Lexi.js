@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAssembly Example</title>
+</head>
+<body>
+    <h1>WebAssembly Example</h1>
+    <p>Result of 5 + 7: <span id="result"></span></p>
+
+    <script>
+        // Load the Wasm module
+        async function loadWasm() {
+            // Fetch the WebAssembly file
+            const response = await fetch('/static/wasm/lexi.wasm');
+            const bytes = await response.arrayBuffer();
+
+            // Compile and instantiate the WebAssembly module
+            const { instance } = await WebAssembly.instantiate(bytes);
+
+            // Call the exported `add` function
+            const result = instance.exports.add(5, 7);
+            document.getElementById('result').textContent = result;
+        }
+
+        // Load and run the Wasm module
+        loadWasm();
+    </script>
+</body>
+</html>

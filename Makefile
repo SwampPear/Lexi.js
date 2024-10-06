@@ -6,10 +6,8 @@ SUB_DIR = src
 
 CFLAGS = -std=c++17 -Wall -Wextra -I $(SRC_PATH)
 
-all: $(TARGET)
+compile:
+	emcc src/wasm/lexi.hpp -O3 -s WASM=1 -o testproject/static/wasm/lexi.wasm
 
-$(TARGET): src/main.cpp src/lexi.hpp
-	$(CC) $(CFLAGS) -o $(TARGET) src/main.cpp
-
-clean:
-	$(RM) $(TARGET)
+serve:
+	cd testproject && python3 manage.py runserver
