@@ -318,6 +318,7 @@ class Tokenizer {
  public:
     Tokenizer() {
         currentRule = 0;
+        test = "this is a test";
 
         addRule("CONTENT", "");     // id 0 reserved for content node
     }
@@ -356,9 +357,10 @@ class Tokenizer {
     }
 
     std::unordered_map<int, Lexeme> lexemes;
+    std::string test;
  private:
     int currentRule;
-
+    
     std::shared_ptr<LLNode> createNode(int tokenType, std::string *src, int start, int end) {
         std::shared_ptr<LLNode> node = std::make_shared<LLNode>();
 
@@ -559,12 +561,12 @@ class Tokenizer {
     }
 };
 
-void tokenize(Tokenizer* tokenizer) {
+void tokenize(Tokenizer *tokenizer) {
     // read file to string
     //std::string path = std::filesystem::current_path()/"main.blam";
     //std::string src = Lexi::readFile(path);
 
-    std::string src = "\"this is a string\"";
+    std::string src = "\"this is a string\"[]";
 
     // build tokenizer
     /*
@@ -588,9 +590,11 @@ void tokenize(Tokenizer* tokenizer) {
     */
     
     // tokenize
+    std::cout << "asdf" << std::endl;
+    //tokenizer->addRule("STRING", "\"[a-zA-Z0-9\\s\\}]*\"");
     TokenNode root = tokenizer->tokenize(&src);
 
-    std::cout << root << std::endl;
+    std::cout << tokenizer->tokenToString(root, true) << std::endl;
 
     //return &root;
 }

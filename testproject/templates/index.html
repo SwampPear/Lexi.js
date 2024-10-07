@@ -11,108 +11,98 @@
     <p>Result of 5 + 7: <span id="result"></span></p>
 
     <script>
+        /*
+        {
+            type: str,
+            start: int,
+            end: int
+        }
+        */
         class Lexi {
-            constructor() {
+            constructor(rules) {
+                this.rules = rules
+
+                this.module = null
                 this.initModule()
-                this.initTokenizer()
             }
 
-            initModule = () => {
-                // load wasm module
-                createModule()
-                .then(Module => {
-                    this.module = Module
-                }).catch(err => {
-                    console.error( "Failed to load Lexi WASM module", err )
-                })
-            }
-
-            ensureModuleLoaded = (callback) => {
-                if ( this.module ) {
-                    callback()
-                } else {
+            async initModule() {
+                try {
                     // load wasm module
-                    createModule()
-                    .then(Module => {
-                        this.module = Module
-                        callback()
-                    }).catch(err => {
-                        console.error( "Failed to load Lexi WASM module", err )
+                    this.module = await createModule()
+                    console.log( "Lexi module loaded" )
+                    
+                    // init tokenizer and tokenize
+                    this.tokenizer = this.module._initTokenizer() 
+
+                    this.rules.forEach(rule => {
+                        this.addRule( rule[0], rule[1] )
                     })
+                    
+                    this.tokenize()
+
+                } catch ( err ) {
+                    console.error( "Lexi module failed to load", err )
                 }
             }
 
-            initTokenizer = () => {
-                this.ensureModuleLoaded( () => {
-                    this.tokenizer = this.module._initTokenizer()
+            ensureModuleLoaded() {
+                return new Promise( ( resolve, reject ) => {
+                    if ( this.module ) {
+                        resolve();
+                    } else {
+                        reject( "Lexi module failed to load" )
+                    }
                 })
             }
 
-            add = () => {
-                this.ensureModuleLoaded( () => {
-                    const result = this.module._add(5, 7);
-                    document.getElementById('result').textContent = result;
-                })
+            async addRule(name, expr) {
+                await this.ensureModuleLoaded();
+                const addRuleFunc = this.module.cwrap('addRule', 'void', ['number', 'number', 'number']);
+
+                // allocate name string
+                const nameLen = this.module.lengthBytesUTF8(name) + 1;
+                const namePtr = this.module._malloc(nameLen);
+                this.module.stringToUTF8(name, namePtr, nameLen);
+
+                // allocate expr string
+                const exprLen = this.module.lengthBytesUTF8(expr) + 1;
+                const exprPtr = this.module._malloc(exprLen);
+                this.module.stringToUTF8(expr, exprPtr, exprLen);
+
+                addRuleFunc(this.tokenizer, namePtr, exprPtr);
+
+                // deallocate string memory
+                this.module._free(namePtr);
+                this.module._free(exprPtr);
             }
 
-            testStr = () => {
-                this.ensureModuleLoaded( () => {
-                    const processString = this.module.cwrap('testStr', 'const char*', ['number']);
-    
-                    // Allocate space in WebAssembly heap for the string
-                    const str = "Hello from JavaScript!";
-                    const len = this.module.lengthBytesUTF8(str) + 1; // Calculate string length in UTF-8 (plus null terminator)
-                    const ptr = this.module._malloc(len); // Allocate memory
+            async tokenize() {
+                await this.ensureModuleLoaded();
 
-                    // Copy the string into the allocated memory
-                    this.module.stringToUTF8(str, ptr, len);
-
-                    // Call the C++ function
-                    const result = processString(ptr);
-
-                    console.log(this.module.UTF8ToString(result ))
-
-                    // Free the memory
-                    this.module._free(ptr);
-                })
-            }
-
-            addRule = (name, expr) => {
-                this.ensureModuleLoaded( () => {
-                    const addRuleFunc = this.module.cwrap('addRule', 'void', ['number', 'number', 'number']);
-    
-                    // allocate name string
-                    const nameLen = this.module.lengthBytesUTF8(name) + 1
-                    const namePtr = this.module._malloc(nameLen)
-                    this.module.stringToUTF8(name, namePtr, nameLen)
-
-                    // allocate name string
-                    const exprLen = this.module.lengthBytesUTF8(expr) + 1
-                    const exprPtr = this.module._malloc(exprLen)
-                    this.module.stringToUTF8(expr, exprPtr, exprLen)
-
-                    addRuleFunc(this.tokenizer, namePtr, exprPtr)
-
-                    // Free the memory
-                    //this.module._free(ptr);
-                })
-            }
-
-            tokenize = () => {
-                this.ensureModuleLoaded( () => {
-                    const tokenizeFunc = this.module.cwrap('tokenize', 'void', ['number']);
-    
-                    tokenizeFunc(this.tokenizer)
-
-                    // Free the memory
-                    //this.module._free(ptr);
-                })
+                const tokenizeFunc = this.module.cwrap('tokenize', 'void', ['number']);
+                tokenizeFunc(this.tokenizer);
             }
         }
 
-        const lexi = new Lexi()
-        //lexi.addRule("STRING", "\"[a-zA-Z0-9\\s\\}]*\"")
-        lexi.tokenize()
+        const lexi = new Lexi( "\"this is a string\"", [
+            ["STRING", "\"[a-zA-Z0-9\\s\\}]*\""],
+            ["SINGLE_LINE_COMMENT", "\\/\\/[\\sa-zA-Z0-9]*\n*"],
+            ["MULTI_LINE_COMMENT", "\\/\\*[\\sa-zA-Z0-9]*\\*\\/"],
+            ["L_DELIMETER", "\\("],
+            ["R_DELIMETER", "\\)"],
+            ["L_CURLY_DELIMETER", "\\{"],
+            ["R_CURLY_DELIMETER", "\\}"],
+            ["L_SQUARE_DELIMETER", "\\["],
+            ["R_SQUARE_DELIMETER", "\\]"],
+            ["OP_DOT", "\\."],
+            ["OP_PLUS", "\\+"],
+            ["OP_MINUS", "\\-"],
+            ["OP_EQUALS", "="],
+            ["OP_SLASH", "/"],
+            ["KEYWORD", "return"],
+            ["SPACE", "\\s+"]
+        ])
     </script>
 </body>
 </html>
