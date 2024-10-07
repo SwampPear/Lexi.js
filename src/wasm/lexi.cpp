@@ -600,4 +600,8 @@ Tokenizer* initTokenizer() {
 int add(int a, int b) {
     return a + b;
 }
+
+const char* testStr(const char* str) {
+    return str;
+}
 }

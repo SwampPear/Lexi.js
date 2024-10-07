@@ -21,7 +21,6 @@
                 // load wasm module
                 createModule()
                 .then(Module => {
-                    console.error( "Lexi WASM module loaded" )
                     this.module = Module
                 }).catch(err => {
                     console.error( "Failed to load Lexi WASM module", err )
@@ -35,7 +34,6 @@
                     // load wasm module
                     createModule()
                     .then(Module => {
-                        console.error( "Lexi WASM module loaded" )
                         this.module = Module
                         callback()
                     }).catch(err => {
@@ -59,8 +57,23 @@
 
             testStr = () => {
                 this.ensureModuleLoaded( () => {
-                    const result = this.module._testStr()
-                    console.log( result )
+                    const processString = this.module.cwrap('testStr', 'const char*', ['number']);
+    
+                    // Allocate space in WebAssembly heap for the string
+                    const str = "Hello from JavaScript!";
+                    const len = this.module.lengthBytesUTF8(str) + 1; // Calculate string length in UTF-8 (plus null terminator)
+                    const ptr = this.module._malloc(len); // Allocate memory
+
+                    // Copy the string into the allocated memory
+                    this.module.stringToUTF8(str, ptr, len);
+
+                    // Call the C++ function
+                    const result = processString(ptr);
+
+                    console.log(this.module.UTF8ToString(result ))
+
+                    // Free the memory
+                    this.module._free(ptr);
                 })
             }
         }
