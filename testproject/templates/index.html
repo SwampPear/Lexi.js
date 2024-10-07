@@ -76,11 +76,43 @@
                     this.module._free(ptr);
                 })
             }
+
+            addRule = (name, expr) => {
+                this.ensureModuleLoaded( () => {
+                    const addRuleFunc = this.module.cwrap('addRule', 'void', ['number', 'number', 'number']);
+    
+                    // allocate name string
+                    const nameLen = this.module.lengthBytesUTF8(name) + 1
+                    const namePtr = this.module._malloc(nameLen)
+                    this.module.stringToUTF8(name, namePtr, nameLen)
+
+                    // allocate name string
+                    const exprLen = this.module.lengthBytesUTF8(expr) + 1
+                    const exprPtr = this.module._malloc(exprLen)
+                    this.module.stringToUTF8(expr, exprPtr, exprLen)
+
+                    addRuleFunc(this.tokenizer, namePtr, exprPtr)
+
+                    // Free the memory
+                    //this.module._free(ptr);
+                })
+            }
+
+            tokenize = () => {
+                this.ensureModuleLoaded( () => {
+                    const tokenizeFunc = this.module.cwrap('tokenize', 'void', ['number']);
+    
+                    tokenizeFunc(this.tokenizer)
+
+                    // Free the memory
+                    //this.module._free(ptr);
+                })
+            }
         }
 
         const lexi = new Lexi()
-        lexi.add()
-        lexi.testStr()
+        //lexi.addRule("STRING", "\"[a-zA-Z0-9\\s\\}]*\"")
+        lexi.tokenize()
     </script>
 </body>
 </html>

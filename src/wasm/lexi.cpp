@@ -355,9 +355,9 @@ class Tokenizer {
         return ss.str();
     }
 
+    std::unordered_map<int, Lexeme> lexemes;
  private:
     int currentRule;
-    std::unordered_map<int, Lexeme> lexemes;
 
     std::shared_ptr<LLNode> createNode(int tokenType, std::string *src, int start, int end) {
         std::shared_ptr<LLNode> node = std::make_shared<LLNode>();
@@ -559,7 +559,7 @@ class Tokenizer {
     }
 };
 
-TokenNode* tokenize() {
+void tokenize(Tokenizer* tokenizer) {
     // read file to string
     //std::string path = std::filesystem::current_path()/"main.blam";
     //std::string src = Lexi::readFile(path);
@@ -567,6 +567,7 @@ TokenNode* tokenize() {
     std::string src = "\"this is a string\"";
 
     // build tokenizer
+    /*
     Tokenizer tokenizer = Tokenizer();
     tokenizer.addRule("STRING", "\"[a-zA-Z0-9\\s\\}]*\"");
     tokenizer.addRule("SINGLE_LINE_COMMENT", "\\/\\/[\\sa-zA-Z0-9]*\n*");
@@ -584,17 +585,27 @@ TokenNode* tokenize() {
     tokenizer.addRule("OP_SLASH", "/");
     tokenizer.addRule("KEYWORD", "return");
     tokenizer.addRule("SPACE", "\\s+");
+    */
     
     // tokenize
-    TokenNode root = tokenizer.tokenize(&src);
+    TokenNode root = tokenizer->tokenize(&src);
 
-    return &root;
+    std::cout << root << std::endl;
+
+    //return &root;
 }
 
 Tokenizer* initTokenizer() {
     Tokenizer *tokenizer = new Tokenizer();
     
     return tokenizer;
+}
+
+void addRule(Tokenizer* tokenizer, const char* name, const char* expr) {
+    std::string nameStr(name);
+    std::string exprStr(expr);
+
+    tokenizer->addRule(nameStr, exprStr);
 }
 
 int add(int a, int b) {
