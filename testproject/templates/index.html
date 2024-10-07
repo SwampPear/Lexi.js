@@ -13,7 +13,8 @@
     <script>
         class Lexi {
             constructor() {
-                this.module = this.initModule()
+                this.initModule()
+                this.initTokenizer()
             }
 
             initModule = () => {
@@ -43,6 +44,12 @@
                 }
             }
 
+            initTokenizer = () => {
+                this.ensureModuleLoaded( () => {
+                    this.tokenizer = this.module._initTokenizer()
+                })
+            }
+
             add = () => {
                 this.ensureModuleLoaded( () => {
                     const result = this.module._add(5, 7);
@@ -53,35 +60,6 @@
 
         const lexi = new Lexi()
         lexi.add()
-
-        // callback function
-        /*
-        function tryMe(param1, param2) {
-        alert(param1 + " and " + param2);
-        }
-
-        // callback executer 
-        function callbackTester(callback) {
-        callback();
-        }
-
-        // test function
-        callbackTester(function() {
-        tryMe("hello", "goodbye");
-        });*/
-
-        /*
-        createModule()
-        .then(Module => {
-            console.log("Lexi loaded successfully");
-        
-            const result = Module._add(5, 7);
-            document.getElementById('result').textContent = result;
-        }).catch(err => {
-            console.error("Failed to load Lexi WASM module", err);
-        })*/
-
-        
     </script>
 </body>
 </html>

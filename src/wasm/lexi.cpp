@@ -591,6 +591,12 @@ TokenNode* tokenize() {
     return &root;
 }
 
+Tokenizer* initTokenizer() {
+    Tokenizer *tokenizer = new Tokenizer();
+    
+    return tokenizer;
+}
+
 int add(int a, int b) {
     return a + b;
 }
