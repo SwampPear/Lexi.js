@@ -28,7 +28,7 @@ var readyPromise = new Promise((resolve, reject) => {
   readyPromiseResolve = resolve;
   readyPromiseReject = reject;
 });
-["_add","_initTokenizer","_memory","___indirect_function_table","onRuntimeInitialized"].forEach((prop) => {
+["_add","_initTokenizer","_testStr","_memory","___indirect_function_table","onRuntimeInitialized"].forEach((prop) => {
   if (!Object.getOwnPropertyDescriptor(readyPromise, prop)) {
     Object.defineProperty(readyPromise, prop, {
       get: () => abort('You are getting ' + prop + ' on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js'),
@@ -1226,6 +1226,27 @@ function dbg(...args) {
       return 0;
     };
 
+
+  var lengthBytesUTF8 = (str) => {
+      var len = 0;
+      for (var i = 0; i < str.length; ++i) {
+        // Gotcha: charCodeAt returns a 16-bit word that is a UTF-16 encoded code
+        // unit, not a Unicode code point of the character! So decode
+        // UTF16->UTF32->UTF8.
+        // See http://unicode.org/faq/utf_bom.html#utf16-3
+        var c = str.charCodeAt(i); // possibly a lead surrogate
+        if (c <= 0x7F) {
+          len++;
+        } else if (c <= 0x7FF) {
+          len += 2;
+        } else if (c >= 0xD800 && c <= 0xDFFF) {
+          len += 4; ++i;
+        } else {
+          len += 3;
+        }
+      }
+      return len;
+    };
 function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
@@ -1251,6 +1272,7 @@ var wasmExports = createWasm();
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
 var _initTokenizer = Module['_initTokenizer'] = createExportWrapper('initTokenizer', 0);
 var _add = Module['_add'] = createExportWrapper('add', 2);
+var _testStr = Module['_testStr'] = createExportWrapper('testStr', 0);
 var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);
 var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();
@@ -1267,6 +1289,7 @@ var dynCall_jiji = Module['dynCall_jiji'] = createExportWrapper('dynCall_jiji', 
 // === Auto-generated postamble setup entry stuff ===
 
 Module['UTF8ToString'] = UTF8ToString;
+Module['lengthBytesUTF8'] = lengthBytesUTF8;
 var missingLibrarySymbols = [
   'writeI53ToI64',
   'writeI53ToI64Clamped',
@@ -1335,7 +1358,6 @@ var missingLibrarySymbols = [
   'formatString',
   'stringToUTF8Array',
   'stringToUTF8',
-  'lengthBytesUTF8',
   'intArrayFromString',
   'intArrayToString',
   'AsciiToString',

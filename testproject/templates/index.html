@@ -56,10 +56,18 @@
                     document.getElementById('result').textContent = result;
                 })
             }
+
+            testStr = () => {
+                this.ensureModuleLoaded( () => {
+                    const result = this.module._testStr()
+                    console.log( result )
+                })
+            }
         }
 
         const lexi = new Lexi()
         lexi.add()
+        lexi.testStr()
     </script>
 </body>
 </html>
