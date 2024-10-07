@@ -26,7 +26,7 @@ class Lexi {
 
             while ( root ) {
                 tokens.push({
-                    type: this.getTokenType( Module, root ),
+                    name: this.getTokenType( Module, root ),
                     start: this.getStart( Module, root ),
                     end: this.getEnd( Module, root )
                 })
