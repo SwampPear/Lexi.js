@@ -8,7 +8,7 @@
   <img align="middle" style="height: 21px" alt="built with love <3" src="http://ForTheBadge.com/images/badges/built-with-love.svg">
 </p>
 
-# Lexi
+# Lexi.js
 
 Lexi.js is a compact tokenization library ported through web assembly from C++
 to TypeScript from my other repo, [Lexi](https://github.com/SwampPear/Lexi)
