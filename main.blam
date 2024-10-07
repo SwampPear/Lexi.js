@@ -1,11 +1,6 @@
-(("asdf"(main()[] {
-    let a = "what is this string"
-}
-
+// this comment should be parsed out
 main() {
     let b = 4
 }
 
--
-
-return "asdf"/..+
+return "asdf"

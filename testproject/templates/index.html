@@ -4,90 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebAssembly Example</title>
-    <script src="/static/wasm/lexi.js"></script>
+    <script src="/static/lexi/lexi-wasm.js"></script>
+    <script src="/static/lexi/lexi.js"></script>
 </head>
 <body>
     <h1>WebAssembly Example</h1>
     <p>Result of 5 + 7: <span id="result"></span></p>
 
     <script>
-        /*
-        {
-            type: str,
-            start: int,
-            end: int
-        }
-        */
-        class Lexi {
-            constructor(rules) {
-                this.rules = rules
+        const str = `// this comment should be parsed out\n main+() {} []`
 
-                this.module = null
-                this.initModule()
-            }
-
-            async initModule() {
-                try {
-                    // load wasm module
-                    this.module = await createModule()
-                    console.log( "Lexi module loaded" )
-                    
-                    // init tokenizer and tokenize
-                    this.tokenizer = this.module._initTokenizer() 
-
-                    this.rules.forEach(rule => {
-                        this.addRule( rule[0], rule[1] )
-                    })
-                    
-                    this.tokenize()
-
-                } catch ( err ) {
-                    console.error( "Lexi module failed to load", err )
-                }
-            }
-
-            ensureModuleLoaded() {
-                return new Promise( ( resolve, reject ) => {
-                    if ( this.module ) {
-                        resolve();
-                    } else {
-                        reject( "Lexi module failed to load" )
-                    }
-                })
-            }
-
-            async addRule(name, expr) {
-                await this.ensureModuleLoaded();
-                const addRuleFunc = this.module.cwrap('addRule', 'void', ['number', 'number', 'number']);
-
-                // allocate name string
-                const nameLen = this.module.lengthBytesUTF8(name) + 1;
-                const namePtr = this.module._malloc(nameLen);
-                this.module.stringToUTF8(name, namePtr, nameLen);
-
-                // allocate expr string
-                const exprLen = this.module.lengthBytesUTF8(expr) + 1;
-                const exprPtr = this.module._malloc(exprLen);
-                this.module.stringToUTF8(expr, exprPtr, exprLen);
-
-                addRuleFunc(this.tokenizer, namePtr, exprPtr);
-
-                // deallocate string memory
-                this.module._free(namePtr);
-                this.module._free(exprPtr);
-            }
-
-            async tokenize() {
-                await this.ensureModuleLoaded();
-
-                const tokenizeFunc = this.module.cwrap('tokenize', 'void', ['number']);
-                tokenizeFunc(this.tokenizer);
-            }
-        }
-
-        const lexi = new Lexi( "\"this is a string\"", [
+        const rules = [
             ["STRING", "\"[a-zA-Z0-9\\s\\}]*\""],
-            ["SINGLE_LINE_COMMENT", "\\/\\/[\\sa-zA-Z0-9]*\n*"],
+            ["SINGLE_LINE_COMMENT", "\\/\\/[\\sa-zA-Z0-9]*\n+"],
             ["MULTI_LINE_COMMENT", "\\/\\*[\\sa-zA-Z0-9]*\\*\\/"],
             ["L_DELIMETER", "\\("],
             ["R_DELIMETER", "\\)"],
@@ -102,7 +31,18 @@
             ["OP_SLASH", "/"],
             ["KEYWORD", "return"],
             ["SPACE", "\\s+"]
-        ])
+        ]
+
+        const lexi = new Lexi( str, rules, ( tokens ) => {
+            console.log( tokens )
+
+            Array.from( tokens ).forEach( token => {
+                console.log( str.substr( token.start, token.end - token.start ))
+            })
+            
+        })
+
+        
     </script>
 </body>
 </html>
